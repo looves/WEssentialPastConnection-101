@@ -159,7 +159,7 @@ module.exports = {
           currentPage = totalPages - 1;
         } else if (i.customId === 'close') {
           // Utiliza i.update para cerrar el inventario
-          await i.update({ content: `**/inventory cerrado...**`, embeds: [], components: [] });
+          await i.update({ content: `</inventory:1291579000044650513> cerrado...`, embeds: [], components: [] });
           collector.stop();  // Detener el colector después de cerrar
           return;
         }
