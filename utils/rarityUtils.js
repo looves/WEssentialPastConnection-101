@@ -1,5 +1,6 @@
 const BOOSTER_ROLE_ID = '1077366130915672165'; // Reemplaza con el ID real del rol booster
-const PATREON_ROLE_ID = '1281839512829558844'; // Reemplaza con el ID real del rol patreon
+const WENEE_ROLE_ID = '1281839512829558844'; // Reemplaza con el ID real del rol wenee
+const SEOKI_ROLE_ID = '1327386590758309959'; // Reemplaza con el ID real del rol wenee
 
 const rarityProbabilities = {
   1: 70, // Común
@@ -32,7 +33,8 @@ async function selectCard(cards, interaction) {
 
   if (member) {
     const hasBoosterRole = member.roles.cache.has(BOOSTER_ROLE_ID);
-    const hasPatreonRole = member.roles.cache.has(PATREON_ROLE_ID);
+    const hasWeneeRole = member.roles.cache.has(WENEE_ROLE_ID);
+    const hasSeokiRole = member.roles.cache.has(SEOKI_ROLE_ID);
 
     if (hasBoosterRole) {
       selectedRarity = getRandomRarity({
@@ -40,11 +42,17 @@ async function selectCard(cards, interaction) {
         2: 35, // Aumentar la probabilidad de poco común para Booster
         3: 8  // Mantener la probabilidad de raro para Booster
       });
-    } else if (hasPatreonRole) {
+    } else if (hasWeneeRole) {
       selectedRarity = getRandomRarity({
         1: 48, // Aumentar la probabilidad de común para Patreon
         2: 40, // Aumentar la probabilidad de poco común para Patreon
         3: 12  // Aumentar la probabilidad de raro para Patreon
+      });
+    } else if (hasSeokiRole) {
+      selectedRarity = getRandomRarity({
+        1: 40, // Aumentar la probabilidad de común para Patreon
+        2: 45, // Aumentar la probabilidad de poco común para Patreon
+        3: 16  // Aumentar la probabilidad de raro para Patreon
       });
     } else {
       selectedRarity = getRandomRarity(rarityProbabilities);
