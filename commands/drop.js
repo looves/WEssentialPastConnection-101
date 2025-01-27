@@ -67,6 +67,36 @@ module.exports = {
                 member = interaction.user;
             }
 
+ // Determinar el cooldown basado en el rol
+            let cooldownTime = BASE_COOLDOWN_TIME;  // Tiempo predeterminado para usuarios normales
+
+
+
+            // Si estamos en un servidor (es decir, el miembro tiene roles)
+            if (member instanceof GuildMember) {
+                if (member.roles.cache.has('1327386590758309959')) { // Seoki
+                    cooldownTime = SEOKI_COOLDOWN_TIME;
+                } else if (member.roles.cache.has('1281839512829558844')) { // Wenee
+                    cooldownTime = WENEE_COOLDOWN_TIME;
+                } else if (member.roles.cache.has('1077366130915672165')) { // Booster
+                    cooldownTime = BOOSTER_COOLDOWN_TIME;
+                }
+            }
+
+            // Verificar si el usuario está en cooldown
+            if (user.lastDrop) {
+                const lastDropTime = new Date(user.lastDrop).getTime();
+                const timeElapsed = currentTime - lastDropTime;
+
+                if (timeElapsed < cooldownTime) {
+                    const remainingTime = cooldownTime - timeElapsed;
+                    const minutes = Math.floor(remainingTime / 60000);
+                    const seconds = Math.floor((remainingTime % 60000) / 1000);
+                    return interaction.editReply(`¡Debes esperar \`${minutes}\` minutos y \`${seconds}\` segundos antes de usar el comando nuevamente!`);
+                }
+            }
+
+
             const selectedCard = await selectCard(cards, member);
 
             const uniqueCode = generateCardCode(selectedCard.idol, selectedCard.grupo, selectedCard.era, String(selectedCard.rarity), selectedCard.event);
@@ -129,35 +159,6 @@ module.exports = {
                 updateInventory(userId, [{ cardId: selectedCard._id, count: copyNumber }]),
                 User.findOneAndUpdate({ userId }, { lastDrop: new Date() })
             ]);
-
- // Determinar el cooldown basado en el rol
-            let cooldownTime = BASE_COOLDOWN_TIME;  // Tiempo predeterminado para usuarios normales
-
-
-
-            // Si estamos en un servidor (es decir, el miembro tiene roles)
-            if (member instanceof GuildMember) {
-                if (member.roles.cache.has('1327386590758309959')) { // Seoki
-                    cooldownTime = SEOKI_COOLDOWN_TIME;
-                } else if (member.roles.cache.has('1281839512829558844')) { // Wenee
-                    cooldownTime = WENEE_COOLDOWN_TIME;
-                } else if (member.roles.cache.has('1077366130915672165')) { // Booster
-                    cooldownTime = BOOSTER_COOLDOWN_TIME;
-                }
-            }
-            // Verificar si el usuario está en cooldown
-            if (user.lastDrop) {
-                const lastDropTime = new Date(user.lastDrop).getTime();
-                const timeElapsed = currentTime - lastDropTime;
-
-                if (timeElapsed < cooldownTime) {
-                    const remainingTime = cooldownTime - timeElapsed;
-                    const minutes = Math.floor(remainingTime / 60000);
-                    const seconds = Math.floor((remainingTime % 60000) / 1000);
-                    return interaction.editReply(`¡Debes esperar \`${minutes}\` minutos y \`${seconds}\` segundos antes de usar el comando nuevamente!`);
-                }
-            }
-
 
             // Mensaje para el cooldown, programado con setTimeout
             setTimeout(() => {
