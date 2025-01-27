@@ -12,8 +12,9 @@ const { selectCard } = require('../utils/rarityUtils');
 const checkBan = require('../utils/checkBan');
 
 const BASE_COOLDOWN_TIME = 8 * 60 * 1000; // 8 minutos para usuarios normales
-const BOOSTER_COOLDOWN_TIME = 6 * 60 * 1000; // 6 minutos para usuarios con rol de Booster
-const PATREON_COOLDOWN_TIME = 5 * 60 * 1000; // 5 minutos para usuarios con rol de Patreon
+const BOOSTER_COOLDOWN_TIME = 7 * 60 * 1000; // 7 minutos para usuarios con rol de Booster
+const WENEE_COOLDOWN_TIME = 6 * 60 * 1000; // 6 minutos para usuarios con rol de Wenee
+const SEOKI_COOLDOWN_TIME = 6 * 60 * 1000; // 5 minutos para usuarios con rol de Seoki
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -66,18 +67,7 @@ module.exports = {
                 member = interaction.user;
             }
 
-            // Determinar el cooldown basado en el rol
-            let cooldownTime = BASE_COOLDOWN_TIME;  // Tiempo predeterminado para usuarios normales
-
-            // Si estamos en un servidor (es decir, el miembro tiene roles)
-            if (member instanceof GuildMember) {
-                if (member.roles.cache.has('1281839512829558844')) { // Patreon
-                    cooldownTime = PATREON_COOLDOWN_TIME;
-                } else if (member.roles.cache.has('1077366130915672165')) { // Booster
-                    cooldownTime = BOOSTER_COOLDOWN_TIME;
-                }
-            }
-
+           
             // Verificar si el usuario está en cooldown
             if (user.lastDrop) {
                 const lastDropTime = new Date(user.lastDrop).getTime();
@@ -103,6 +93,35 @@ module.exports = {
                 return interaction.editReply('No se pudo incrementar el contador de la carta.');
             }
 
+
+            const imageUrl = selectedCard.image;
+            const extension = getImageExtension(imageUrl);
+            const attachment = new AttachmentBuilder(imageUrl, { name: `${cardCode}${extension}` });
+
+            // Lógica para determinar el level
+            let level = 'level 0';
+
+            // Verificar si estamos en un servidor
+            if (member && member.guild) {
+                // Solo verificar los roles si estamos en un servidor
+                if (member.roles.cache.has('1327386590758309959')) { // SEOKI_ROLE_ID
+                    level = 'level 3';
+                } else if (member.roles.cache.has('1281839512829558844')) { // WENEE_ROLE_ID
+                    level = 'level 2';
+                } else if (member.roles.cache.has('1077366130915672165')) { // BOOSTER_ROLE_ID
+                    level = 'level 1';
+                }
+            } else {
+                level = 'level 0';
+            }
+
+            const embed = new EmbedBuilder()
+                .setColor('#60a5fa')
+                .setDescription(`_ _<@${interaction.user.id}>, adquiriste a \`${selectedCard.idol}\` de **${selectedCard.grupo}**\n_ _ **${selectedCard.era || selectedCard.event}** <:dot:1291582825232994305> \`#${copyNumber}\`\n_ _ \`\`\`${uniqueCode}\`\`\`\n_ _　[server support](https://discord.gg/wonho) | [patreon](https://www.patreon.com/wonhobot) | \`${level}\``);
+
+            // Responder con el embed y la imagen
+            await interaction.editReply({ embeds: [embed], files: [attachment] });
+
             // Crear la carta caída
             const droppedCard = new DroppedCard({
                 userId,
@@ -125,31 +144,22 @@ module.exports = {
                 User.findOneAndUpdate({ userId }, { lastDrop: new Date() })
             ]);
 
-            const imageUrl = selectedCard.image;
-            const extension = getImageExtension(imageUrl);
-            const attachment = new AttachmentBuilder(imageUrl, { name: `${cardCode}${extension}` });
+ // Determinar el cooldown basado en el rol
+            let cooldownTime = BASE_COOLDOWN_TIME;  // Tiempo predeterminado para usuarios normales
 
-            // Lógica para determinar el level
-            let level = 'level 0';
 
-            // Verificar si estamos en un servidor
-            if (member && member.guild) {
-                // Solo verificar los roles si estamos en un servidor
-                if (member.roles.cache.has('1281839512829558844')) { // PATREON_ROLE_ID
-                    level = 'level 2';
-                } else if (member.roles.cache.has('1077366130915672165')) { // BOOSTER_ROLE_ID
-                    level = 'level 1';
+
+            // Si estamos en un servidor (es decir, el miembro tiene roles)
+            if (member instanceof GuildMember) {
+                if (member.roles.cache.has('1327386590758309959')) { // Seoki
+                    cooldownTime = SEOKI_COOLDOWN_TIME;
+                } else if (member.roles.cache.has('1281839512829558844')) { // Wenee
+                    cooldownTime = WENEE_COOLDOWN_TIME;
+                } else if (member.roles.cache.has('1077366130915672165')) { // Booster
+                    cooldownTime = BOOSTER_COOLDOWN_TIME;
                 }
-            } else {
-                level = 'level 0';
             }
 
-            const embed = new EmbedBuilder()
-                .setColor('#60a5fa')
-                .setDescription(`_ _<@${interaction.user.id}>, adquiriste a \`${selectedCard.idol}\` de **${selectedCard.grupo}**\n_ _ **${selectedCard.era || selectedCard.event}** <:dot:1291582825232994305> \`#${copyNumber}\`\n_ _ \`\`\`${uniqueCode}\`\`\`\n_ _　[server support](https://discord.gg/wonho) | [patreon](https://www.patreon.com/wonhobot) | \`${level}\``);
-
-            // Responder con el embed y la imagen
-            await interaction.editReply({ embeds: [embed], files: [attachment] });
 
             // Mensaje para el cooldown, programado con setTimeout
             setTimeout(() => {
